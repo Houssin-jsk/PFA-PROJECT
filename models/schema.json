@@ -1,0 +1,137 @@
+{
+  "model_path": "models/best_model.pkl",
+  "input_schema": {
+    "raw_input_columns": [
+      "Gender",
+      "Senior Citizen",
+      "Partner",
+      "Dependents",
+      "Tenure Months",
+      "Phone Service",
+      "Multiple Lines",
+      "Internet Service",
+      "Online Security",
+      "Online Backup",
+      "Device Protection",
+      "Tech Support",
+      "Streaming TV",
+      "Streaming Movies",
+      "Contract",
+      "Paperless Billing",
+      "Payment Method",
+      "Monthly Charges",
+      "Total Charges",
+      "Avg Charges per Month",
+      "Has Long Tenure",
+      "IsMonthToMonth",
+      "Payment Method Simplified"
+    ],
+    "dtypes": {
+      "Gender": "int64",
+      "Senior Citizen": "int64",
+      "Partner": "int64",
+      "Dependents": "int64",
+      "Tenure Months": "int64",
+      "Phone Service": "int64",
+      "Multiple Lines": "int64",
+      "Internet Service": "int64",
+      "Online Security": "int64",
+      "Online Backup": "int64",
+      "Device Protection": "int64",
+      "Tech Support": "int64",
+      "Streaming TV": "int64",
+      "Streaming Movies": "int64",
+      "Contract": "int64",
+      "Paperless Billing": "int64",
+      "Payment Method": "int64",
+      "Monthly Charges": "float64",
+      "Total Charges": "float64",
+      "Avg Charges per Month": "float64",
+      "Has Long Tenure": "int64",
+      "IsMonthToMonth": "int64",
+      "Payment Method Simplified": "int64"
+    }
+  },
+  "category_maps": {
+    "Gender": {
+      "Male": 0,
+      "Female": 1
+    },
+    "Senior Citizen": {
+      "No": 0,
+      "Yes": 1
+    },
+    "Partner": {
+      "No": 0,
+      "Yes": 1
+    },
+    "Dependents": {
+      "No": 0,
+      "Yes": 1
+    },
+    "Phone Service": {
+      "Yes": 0,
+      "No": 1
+    },
+    "Multiple Lines": {
+      "No": 0,
+      "Yes": 1,
+      "No phone service": 2
+    },
+    "Internet Service": {
+      "DSL": 0,
+      "Fiber optic": 1,
+      "No": 2
+    },
+    "Online Security": {
+      "Yes": 0,
+      "No": 1,
+      "No internet service": 2
+    },
+    "Online Backup": {
+      "Yes": 0,
+      "No": 1,
+      "No internet service": 2
+    },
+    "Device Protection": {
+      "No": 0,
+      "Yes": 1,
+      "No internet service": 2
+    },
+    "Tech Support": {
+      "No": 0,
+      "Yes": 1,
+      "No internet service": 2
+    },
+    "Streaming TV": {
+      "No": 0,
+      "Yes": 1,
+      "No internet service": 2
+    },
+    "Streaming Movies": {
+      "No": 0,
+      "Yes": 1,
+      "No internet service": 2
+    },
+    "Contract": {
+      "Month-to-month": 0,
+      "Two year": 1,
+      "One year": 2
+    },
+    "Paperless Billing": {
+      "Yes": 0,
+      "No": 1
+    },
+    "Payment Method": {
+      "Mailed check": 0,
+      "Electronic check": 1,
+      "Bank transfer (automatic)": 2,
+      "Credit card (automatic)": 3
+    },
+    "Payment Method Simplified": {
+      "Mailed check": 0,
+      "Electronic check": 1,
+      "Automatic Payment": 2
+    }
+  }
+}

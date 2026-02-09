@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Telco Churn Insights{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block head_scripts %}{% endblock %}
+</head>
+<body class="app-body">
+    <div class="app-shell">
+        <header class="top-nav" data-nav>
+            <div class="top-nav__brand">
+                <a class="brand" href="{% if current_user.is_authenticated %}{{ url_for('home') }}{% else %}{{ url_for('register') }}{% endif %}">
+                    <span class="brand__logo">TELCO</span>
+                    <div class="brand__copy">
+                        <span class="brand__title">Telco Churn AI</span>
+                        <span class="brand__subtitle">CHURN INTELLIGENCE HUB</span>
+                    </div>
+                </a>
+            </div>
+            <button class="nav-toggle" type="button" aria-label="Basculer la navigation" aria-expanded="false" data-nav-toggle>
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav class="main-nav" data-nav-links>
+                {% if current_user.is_authenticated %}
+                    <div class="nav-group">
+                        <span class="nav-group__label">Navigation</span>
+                        <a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}is-active{% endif %}">Accueil</a>
+                        <a href="{{ url_for('predict_individual') }}" class="{% if request.endpoint == 'predict_individual' %}is-active{% endif %}">Prédire</a>
+                        <a href="{{ url_for('predict_batch_workspace') }}" class="{% if request.endpoint == 'predict_batch_workspace' %}is-active{% endif %}">Dataset</a>
+                        <a href="{{ url_for('history') }}" class="{% if request.endpoint in ['history', 'edit_history'] %}is-active{% endif %}">Historique</a>
+                        <a href="{{ url_for('analytics') }}" class="{% if request.endpoint == 'analytics' %}is-active{% endif %}">Analytics</a>
+                    </div>
+                {% endif %}
+            </nav>
+            <div class="nav-actions">
+                {% if current_user.is_authenticated %}
+                    <div class="user-menu">
+                        <div class="user-chip">
+                            <div class="user-chip__avatar">{{ (current_user.first_name or '?')[:1]|upper }}{{ (current_user.last_name or '')[:1]|upper }}</div>
+                            <div class="user-chip__meta">
+                                <span class="user-chip__name">{{ current_user.first_name or current_user.email }} {{ current_user.last_name }}</span>
+                                <div class="user-chip__line">
+                                    <span class="user-chip__role">{{ current_user.email }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <a class="btn btn-ghost" href="{{ url_for('logout') }}">Déconnexion</a>
+                    </div>
+                {% else %}
+                    <div class="guest-actions">
+                        <a class="btn btn-text" href="{{ url_for('login') }}">Connexion</a>
+                        <a class="btn btn-primary" href="{{ url_for('register') }}">Inscription</a>
+                    </div>
+                {% endif %}
+            </div>
+        </header>
+        <main class="app-main">
+            <div class="container">
+                {% with messages = get_flashed_messages(with_categories=True) %}
+                    {% if messages %}
+                        <div class="flash-stack" role="status">
+                            {% for category, message in messages %}
+                                <div class="flash flash-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+        <footer class="app-footer">
+            <div class="container footer__content">
+                <span>© {{ current_year | default(2025) }} Telco Churn AI · Fidélisation assistée par IA</span>
+                <div class="footer__links">
+                    <span>Support : support@telcoai.io</span>
+                    <span>Version front-end : 2.0</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

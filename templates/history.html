@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% block title %}Historique des prédictions{% endblock %}
+{% block head_scripts %}
+    {% if stats.total > 0 %}
+        <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    {% endif %}
+{% endblock %}
+{% block content %}
+<section class="card hero-card history-hero">
+    <div>
+        <p class="eyebrow">Historique</p>
+        <h1>Suivi complet des prédictions</h1>
+        <p class="muted">Retrouvez toutes vos prédictions individuelles et batch, filtrez par risque, recherchez un client précis et auditez les détails en toute sécurité.</p>
+    </div>
+    <div class="hero-meta">
+        <div>
+            <span class="muted small">Prédictions suivies</span>
+            <strong>{{ stats.total }}</strong>
+        </div>
+        <div>
+            <span class="muted small">Résultats actuels</span>
+            <strong>{{ result_count }}</strong>
+        </div>
+    </div>
+</section>
+
+<section class="card history-kpis">
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <p class="muted small">Total historisé</p>
+            <strong>{{ stats.total }}</strong>
+        </div>
+        <div class="kpi-card">
+            <p class="muted small">% Risque élevé</p>
+            <strong>{{ stats.pct_high }} %</strong>
+        </div>
+        <div class="kpi-card">
+            <p class="muted small">% Risque moyen</p>
+            <strong>{{ stats.pct_medium }} %</strong>
+        </div>
+        <div class="kpi-card">
+            <p class="muted small">% Risque faible</p>
+            <strong>{{ stats.pct_low }} %</strong>
+        </div>
+        <div class="kpi-card">
+            <p class="muted small">Probabilité moyenne</p>
+            <strong>{{ stats.avg_probability_pct }} %</strong>
+        </div>
+    </div>
+    <div class="risk-visual">
+        <canvas width="220" height="220" data-risk-chart='{{ risk_chart_data | tojson }}'></canvas>
+    </div>
+</section>
+
+<section class="card filters-card">
+    <form method="get" class="filter-toolbar">
+        <label>
+            <span>Recherche client</span>
+            <input type="search" name="search" placeholder="ID ou référence" value="{{ filters.search }}">
+        </label>
+        <label>
+            <span>Niveau de risque</span>
+            <select name="risk">
+                <option value="all" {% if filters.risk == 'all' %}selected{% endif %}>Tous</option>
+                <option value="high" {% if filters.risk == 'high' %}selected{% endif %}>Risque élevé</option>
+                <option value="medium" {% if filters.risk == 'medium' %}selected{% endif %}>Risque moyen</option>
+                <option value="low" {% if filters.risk == 'low' %}selected{% endif %}>Risque faible</option>
+            </select>
+        </label>
+        <label>
+            <span>Source</span>
+            <select name="source">
+                <option value="all" {% if filters.source == 'all' %}selected{% endif %}>Toutes</option>
+                <option value="individual" {% if filters.source == 'individual' %}selected{% endif %}>Individuel</option>
+                <option value="batch" {% if filters.source == 'batch' %}selected{% endif %}>Batch</option>
+            </select>
+        </label>
+        <label>
+            <span>Date de début</span>
+            <input type="date" name="start_date" value="{{ filters.start_date }}">
+        </label>
+        <label>
+            <span>Date de fin</span>
+            <input type="date" name="end_date" value="{{ filters.end_date }}">
+        </label>
+        <label>
+            <span>Lignes / page</span>
+            <select name="page_size">
+                {% for option in [10, 25, 50, 100] %}
+                    <option value="{{ option }}" {% if filters.page_size == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <div class="filter-actions">
+            <button type="submit" class="btn-primary">Filtrer</button>
+            <a href="{{ url_for('history') }}" class="btn-tertiary">Réinitialiser</a>
+        </div>
+    </form>
+</section>
+
+<section class="card history-table-card">
+    <header class="card-header history-table-header">
+        <div>
+            <h2>Journal des prédictions</h2>
+            <p class="muted small">{{ result_count }} résultat{% if result_count != 1 %}s{% endif %} - filtres actifs conservés</p>
+        </div>
+        <div class="history-actions">
+            <a class="btn-tertiary btn-compact" href="{{ url_for('history_export') }}">Télécharger le dataset</a>
+        </div>
+    </header>
+    {% if predictions %}
+        <div class="table-wrapper horizontal-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Référence client</th>
+                        <th>Probabilité</th>
+                        <th>Churn label</th>
+                        <th>Source</th>
+                        <th>Date &amp; heure</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in predictions %}
+                        <tr>
+                            <td>#{{ row.id }}</td>
+                            <td>{{ row.customer_reference }}</td>
+                            <td>{{ row.probability_display }}</td>
+                            <td><span class="risk-badge {{ row.churn_badge_class }}">{{ row.churn_label }}</span></td>
+                            <td>{{ row.source_label }}</td>
+                            <td>{{ row.created_display }}</td>
+                            <td class="table-actions">
+                                <a class="btn-tertiary btn-compact" href="{{ url_for('edit_history', record_id=row.id) }}">
+                                    <span class="icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5l4 4-10 10H6.5v-4.5z"/><path d="M15 5.5l3.5 3.5"/></svg>
+                                    </span>
+                                    Modifier
+                                </a>
+                                <a class="btn-secondary btn-compact" href="{{ url_for('history_pdf', record_id=row.id) }}" target="_blank" rel="noopener">
+                                    <span class="icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9" /><path d="M16.5 3.5l4 4-10 10H6.5v-4.5z"/><path d="M15 5.5l3.5 3.5"/></svg>
+                                    </span>
+                                    PDF
+                                </a>
+                                <button type="button" class="btn-tertiary btn-compact" data-view-details data-details='{{ row.detail_payload | tojson }}'>
+                                    <span class="icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </span>
+                                    Voir
+                                </button>
+                                <button type="button" class="btn-danger btn-compact" data-delete-trigger data-delete-url="{{ url_for('delete_history', record_id=row.id) }}" data-delete-label="{{ row.customer_reference }}">
+                                    <span class="icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                    </span>
+                                    Supprimer
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>Aucune prédiction enregistrée pour le moment.</p>
+            <p class="muted">Enregistrez vos prochaines prédictions pour alimenter cette vue.</p>
+        </div>
+    {% endif %}
+    {% if pagination.pages > 1 %}
+        <nav class="pagination-nav">
+            <button class="btn-tertiary" type="button" {% if not pagination_links.prev %}disabled{% endif %} data-page-link="{{ pagination_links.prev or '' }}">« Précédent</button>
+            <ul class="pagination-pages">
+                {% for page_link in page_links %}
+                    <li>
+                        <button type="button" class="btn-tertiary {% if page_link.active %}is-active{% endif %}" data-page-link="{{ page_link.url }}">{{ page_link.number }}</button>
+                    </li>
+                {% endfor %}
+            </ul>
+            <button class="btn-tertiary" type="button" {% if not pagination_links.next %}disabled{% endif %} data-page-link="{{ pagination_links.next or '' }}">Suivant »</button>
+        </nav>
+    {% endif %}
+</section>
+
+<div class="modal" data-modal="details" hidden>
+    <div class="modal__dialog">
+        <header class="modal__header">
+            <h3>Détails de la prédiction</h3>
+            <button type="button" class="btn-tertiary" data-close-modal>Fermer</button>
+        </header>
+        <div class="modal__body" data-details-body>
+            <div class="details-grid">
+                <div>
+                    <p class="muted small">ID</p>
+                    <strong data-details-id></strong>
+                </div>
+                <div>
+                    <p class="muted small">Client</p>
+                    <strong data-details-client></strong>
+                </div>
+                <div>
+                    <p class="muted small">Probabilité</p>
+                    <strong data-details-probability></strong>
+                </div>
+                <div>
+                    <p class="muted small">Risque</p>
+                    <span class="risk-badge" data-details-risk></span>
+                </div>
+                <div>
+                    <p class="muted small">Source</p>
+                    <strong data-details-source></strong>
+                </div>
+                <div>
+                    <p class="muted small">Horodatage</p>
+                    <strong data-details-date></strong>
+                </div>
+            </div>
+            <div class="details-notes" data-details-notes hidden>
+                <p class="muted small">Notes</p>
+                <p data-details-notes-text></p>
+            </div>
+            <div class="details-json">
+                <p class="muted small">Entrée complète</p>
+                <pre data-details-json></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" data-modal="delete" hidden>
+    <div class="modal__dialog">
+        <header class="modal__header">
+            <h3>Supprimer la prédiction</h3>
+        </header>
+        <div class="modal__body">
+            <p>Êtes-vous sûr de vouloir supprimer cette prédiction ?</p>
+            <p class="muted" data-delete-summary></p>
+            <form method="post" data-delete-form>
+                <input type="hidden" name="redirect_to" value="{{ request_path }}">
+                <div class="modal__actions">
+                    <button type="button" class="btn-tertiary" data-close-modal>Annuler</button>
+                    <button type="submit" class="btn-danger">Supprimer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const navButtons = document.querySelectorAll('[data-page-link]');
+    navButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-page-link');
+            if (target) {
+                window.location.href = target;
+            }
+        });
+    });
+
+    const detailsModal = document.querySelector('[data-modal="details"]');
+    const deleteModal = document.querySelector('[data-modal="delete"]');
+    const closeButtons = document.querySelectorAll('[data-close-modal]');
+    closeButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const modal = btn.closest('.modal');
+            if (modal) {
+                modal.hidden = true;
+            }
+        });
+    });
+
+    const detailButtons = document.querySelectorAll('[data-view-details]');
+    detailButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            if (!detailsModal) return;
+            const payload = button.getAttribute('data-details');
+            if (!payload) return;
+            try {
+                const data = JSON.parse(payload);
+                detailsModal.querySelector('[data-details-id]').textContent = `#${data.id}`;
+                detailsModal.querySelector('[data-details-client]').textContent = data.customer_reference || '—';
+                detailsModal.querySelector('[data-details-probability]').textContent = data.probability_display || '—';
+                const riskBadge = detailsModal.querySelector('[data-details-risk]');
+                riskBadge.textContent = data.risk_label || '—';
+                riskBadge.className = `risk-badge ${data.risk_badge_class || ''}`;
+                detailsModal.querySelector('[data-details-source]').textContent = data.source_label || '—';
+                detailsModal.querySelector('[data-details-date]').textContent = data.created_at || '—';
+                const notesBlock = detailsModal.querySelector('[data-details-notes]');
+                if (data.notes) {
+                    notesBlock.hidden = false;
+                    detailsModal.querySelector('[data-details-notes-text]').textContent = data.notes;
+                } else {
+                    notesBlock.hidden = true;
+                }
+                const pretty = JSON.stringify(data.payload || {}, null, 2);
+                detailsModal.querySelector('[data-details-json]').textContent = pretty;
+                detailsModal.hidden = false;
+            } catch (error) {
+                console.error('Erreur lors de l\'affichage du détail', error);
+            }
+        });
+    });
+
+    const deleteButtons = document.querySelectorAll('[data-delete-trigger]');
+    const deleteSummary = document.querySelector('[data-delete-summary]');
+    const deleteForm = document.querySelector('[data-delete-form]');
+    deleteButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            if (!deleteModal || !deleteForm) return;
+            const url = button.getAttribute('data-delete-url');
+            const label = button.getAttribute('data-delete-label') || '';
+            deleteForm.action = url;
+            deleteSummary.textContent = label ? `Client : ${label}` : '';
+            deleteModal.hidden = false;
+        });
+    });
+
+    const chartCanvas = document.querySelector('[data-risk-chart]');
+    if (chartCanvas && window.Chart) {
+        try {
+            const payload = JSON.parse(chartCanvas.dataset.riskChart || JSON.stringify({ labels: [], values: [] }));
+            if (payload.labels && payload.values) {
+                new Chart(chartCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: payload.labels,
+                        datasets: [{
+                            data: payload.values,
+                            backgroundColor: ['#ef4444', '#fb923c', '#22c55e'],
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                        },
+                    },
+                });
+            }
+        } catch (error) {
+            console.error('Impossible de charger le graphique de risque.', error);
+        }
+    }
+});
+</script>
+{% endblock %}

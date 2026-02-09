@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Accès refusé{% endblock %}
+{% block content %}
+<section class="card status-card">
+    <div class="status-icon status-icon--warning">🔒</div>
+    <h1>Accès non autorisé</h1>
+    <p class="muted">Vous ne disposez pas des droits suffisants pour consulter cette page. Si vous pensez qu'il s'agit d'une erreur, contactez votre administrateur.</p>
+    <div class="form-actions">
+        <a href="{{ url_for('home') }}" class="btn-primary">Retour au tableau de bord</a>
+        <a href="{{ url_for('profile') }}" class="btn-tertiary">Gérer mon profil</a>
+    </div>
+</section>
+{% endblock %}

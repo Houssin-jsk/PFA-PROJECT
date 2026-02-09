@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Page introuvable{% endblock %}
+{% block content %}
+<section class="card hero-card error-panel">
+    <div class="card-header">
+        <div>
+            <span class="empty-state__icon">🛰️</span>
+            <h1>Page introuvable</h1>
+            <p class="muted">La page demandée n'existe pas ou a été déplacée.</p>
+        </div>
+    </div>
+    <a href="{{ url_for('home') }}" class="btn-primary btn-xl">Retour à l'accueil</a>
+</section>
+{% endblock %}

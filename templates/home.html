@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Accueil – Teleco Churn{% endblock %}
+{% block content %}
+<section class="home-hero card hero-card">
+    <div class="hero-content">
+        <p class="eyebrow">Teleco Churn</p>
+        <h1>Plateforme de prédiction de churn (télécom)</h1>
+        <p class="lead">
+            Une application IA qui mesure le churn, anticipe les clients à risque et aide vos équipes à décider plus vite.
+        </p>
+        <div class="hero-highlights">
+            <span class="hero-badge">Application Teleco Churn</span>
+            <span class="hero-badge hero-badge--ghost">Prédiction · Historique · Batch · Analytics</span>
+        </div>
+        <div class="hero-ctas">
+            <a class="btn btn-primary btn-xl" href="{{ url_for('predict_individual') }}">Commencer les prédictions</a>
+            <a class="btn btn-tertiary btn-xl" href="{{ url_for('history') }}">Voir le tableau de bord</a>
+        </div>
+    </div>
+</section>
+
+<section class="story-grid">
+    <article class="card story-card">
+        <p class="eyebrow">Pourquoi ce projet ?</p>
+        <h2>Comprendre et agir avant que le client parte</h2>
+        <p>
+            Chaque mois, les opérateurs télécoms voient une partie de leurs abonnés résilier sans pouvoir anticiper.
+            PFA TELCO a été conçu pour mesurer ce churn, comprendre les profils à risque et déclencher des actions ciblées
+            avant la résiliation. Le jeu de données <strong>Telco_customer_churn.xlsx</strong> alimente nos analyses
+            et entraîne nos modèles pour qu'ils collent à la réalité métier.
+        </p>
+        <ul class="bullet-list">
+            <li>Mesurer en continu le churn global et par segment.</li>
+            <li>Identifier les signaux faibles dans la facturation et l'usage.</li>
+            <li>Prioriser les campagnes de rétention grâce aux scores IA.</li>
+        </ul>
+    </article>
+    <article class="card timeline-card">
+        <p class="eyebrow">Étapes clés</p>
+        <ul class="timeline">
+            <li>
+                <strong>15/08/2025</strong>
+                <span>Idée du projet – problème identifié dans les télécoms.</span>
+            </li>
+            <li>
+                <strong>v1</strong>
+                <span>Première version – MVP avec prédiction simple.</span>
+            </li>
+            <li>
+                <strong>v2</strong>
+                <span>Amélioration du modèle et ajout de l'historique.</span>
+            </li>
+            <li>
+                <strong>v3</strong>
+                <span>Version actuelle : dashboard, prédiction individuelle et batch.</span>
+            </li>
+        </ul>
+    </article>
+</section>
+
+<section class="features-section card">
+    <div class="features-header">
+        <p class="eyebrow">What’s in the app?</p>
+        <h2>Tout ce qu'il faut pour piloter la rétention</h2>
+        <p class="muted">Chaque module répond à un usage concret pour vos équipes marketing, data et relation client.</p>
+    </div>
+    <div class="feature-grid">
+        <article class="feature-card">
+            <span class="feature-card__icon">⚡</span>
+            <h3>Prédiction individuelle</h3>
+            <p>Analysez un client en détail, renseignez ses caractéristiques et obtenez instantanément son score.</p>
+        </article>
+        <article class="feature-card">
+            <span class="feature-card__icon">📂</span>
+            <h3>Prédiction en batch</h3>
+            <p>Importez un fichier CSV/Excel et prédisez le churn pour des centaines de clients en une seule fois.</p>
+        </article>
+        <article class="feature-card">
+            <span class="feature-card__icon">🗂️</span>
+            <h3>Historique des prédictions</h3>
+            <p>Conservez toutes les exécutions, comparez les probabilités et documentez vos décisions.</p>
+        </article>
+        <article class="feature-card">
+            <span class="feature-card__icon">📈</span>
+            <h3>Analyse & Insights</h3>
+            <p>Visualisez les segments à risque, suivez vos KPI et partagez des insights actionnables.</p>
+        </article>
+    </div>
+</section>
+
+<section class="insight-section card">
+    <div class="section-heading">
+        <p class="eyebrow">Vue globale de l'utilisation</p>
+        <h2>KPIs issus de vos prédictions réelles</h2>
+        <p class="muted">Ces indicateurs se basent sur les entrées présentes dans l'historique des prédictions, pour refléter l'adoption concrète de la plateforme.</p>
+    </div>
+    <div class="kpi-row">
+        <article class="kpi-card">
+            <span class="kpi-label">Prédictions enregistrées</span>
+            <span class="kpi-value">{{ stats_total_predictions | default(0) }}</span>
+            <p class="muted small">
+                {{ stats_individual_predictions | default(0) }} individuelles ·
+                {{ stats_batch_predictions | default(0) }} issues de lots
+                {% if stats_unique_batches %}
+                    ({{ stats_unique_batches }} lots distincts)
+                {% endif %}
+            </p>
+        </article>
+        <article class="kpi-card">
+            <span class="kpi-label">Décisions à risque</span>
+            <span class="kpi-value">{{ stats_high_risk_predictions | default(0) }}</span>
+            <p class="muted small">Nombre de prédictions marquées avec un statut "Risque".</p>
+        </article>
+        <article class="kpi-card">
+            <span class="kpi-label">Probabilité moyenne</span>
+            <span class="kpi-value">{{ stats_avg_probability | default(0) | round(2) }} %</span>
+            <p class="muted small">Moyenne des probabilités enregistrées (0 à 100 %).</p>
+        </article>
+    </div>
+    <p class="muted small">Besoin de plus ? Les analyses détaillées restent disponibles via le module d'analyse globale.</p>
+</section>
+{% endblock %}

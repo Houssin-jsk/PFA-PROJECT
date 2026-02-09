@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+{% block title %}Prédiction individuelle{% endblock %}
+{% block content %}
+<section class="card hero-card card--light prediction-hero">
+    <div>
+        <p class="eyebrow">Simulation client</p>
+        <h1>Prédiction de churn individuelle</h1>
+        <p class="muted">Renseignez les attributs clés d’un client pour obtenir une probabilité de churn, une interprétation métier et enregistrer la simulation dans l’historique si besoin.</p>
+    </div>
+</section>
+
+<section class="prediction-grid">
+    <article class="card card--light prediction-form-card">
+        <form method="post" id="individual-form" novalidate>
+            <div class="form-intro">
+                <div>
+                    <h2>Informations client</h2>
+                    <p class="muted small">Tous les champs sont requis pour garantir une prédiction fiable.</p>
+                </div>
+                <div class="form-inline-actions">
+                    <label>
+                        Référence client (optionnel)
+                        <input type="text" name="client_reference" placeholder="ID CRM, numéro de contrat…" value="{{ client_reference or '' }}">
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section__header">
+                    <h3>Profil personnel</h3>
+                    <small class="field-hint">Définissez le profil démographique du client.</small>
+                </div>
+                <div class="field-grid">
+                    <label>
+                        Genre
+                        <select name="Gender" required>
+                            <option value="" disabled {% if not form_inputs.get('Gender') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Male', 'Female'] %}
+                                <option value="{{ option }}" {% if form_inputs.get('Gender') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Senior Citizen
+                        <select name="Senior Citizen" required>
+                            <option value="" disabled {% if not form_inputs.get('Senior Citizen') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Yes', 'No'] %}
+                                <option value="{{ option }}" {% if form_inputs.get('Senior Citizen') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Partner
+                        <select name="Partner" required>
+                            <option value="" disabled {% if not form_inputs.get('Partner') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Yes', 'No'] %}
+                                <option value="{{ option }}" {% if form_inputs.get('Partner') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Dependents
+                        <select name="Dependents" required>
+                            <option value="" disabled {% if not form_inputs.get('Dependents') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Yes', 'No'] %}
+                                <option value="{{ option }}" {% if form_inputs.get('Dependents') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section__header">
+                    <h3>Compte & ancienneté</h3>
+                    <small class="field-hint">Utilisé pour calculer les indicateurs de fidélité.</small>
+                </div>
+                <div class="field-grid">
+                    <label>
+                        Tenure Months
+                        <input type="number" min="1" step="1" name="Tenure Months" placeholder="Ex : 24" value="{{ form_inputs.get('Tenure Months', '') }}" required>
+                        <small class="field-hint">Nombre de mois depuis l’activation.</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section__header">
+                    <h3>Services souscrits</h3>
+                    <small class="field-hint">Cochez l’ensemble des services actifs ou non pour ce client.</small>
+                </div>
+                <div class="field-grid services-grid">
+                    {% set yes_no = ['Yes', 'No'] %}
+                    <label>
+                        Phone Service
+                        <select name="Phone Service" required>
+                            <option value="" disabled {% if not form_inputs.get('Phone Service') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in yes_no %}
+                                <option value="{{ option }}" {% if form_inputs.get('Phone Service') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Multiple Lines
+                        <select name="Multiple Lines" required>
+                            <option value="" disabled {% if not form_inputs.get('Multiple Lines') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Yes', 'No', 'No phone service'] %}
+                                <option value="{{ option }}" {% if form_inputs.get('Multiple Lines') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Internet Service
+                        <select name="Internet Service" required>
+                            <option value="" disabled {% if not form_inputs.get('Internet Service') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['DSL', 'Fiber optic', 'No'] %}
+                                <option value="{{ option }}" {% if form_inputs.get('Internet Service') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    {% for field in ['Online Security', 'Online Backup', 'Device Protection', 'Tech Support', 'Streaming TV', 'Streaming Movies'] %}
+                        <label>
+                            {{ field }}
+                            <select name="{{ field }}" required>
+                                <option value="" disabled {% if not form_inputs.get(field) %}selected{% endif %}>Sélectionner</option>
+                                {% for option in ['Yes', 'No', 'No internet service'] %}
+                                    <option value="{{ option }}" {% if form_inputs.get(field) == option %}selected{% endif %}>{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section__header">
+                    <h3>Contrat & paiement</h3>
+                </div>
+                <div class="field-grid">
+                    <label>
+                        Contract
+                        <select name="Contract" required>
+                            <option value="" disabled {% if not form_inputs.get('Contract') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Month-to-month', 'One year', 'Two year'] %}
+                                <option value="{{ option }}" {% if form_inputs.get('Contract') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Paperless Billing
+                        <select name="Paperless Billing" required>
+                            <option value="" disabled {% if not form_inputs.get('Paperless Billing') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in yes_no %}
+                                <option value="{{ option }}" {% if form_inputs.get('Paperless Billing') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Payment Method
+                        <select name="Payment Method" required>
+                            <option value="" disabled {% if not form_inputs.get('Payment Method') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Electronic check', 'Mailed check', 'Bank transfer (automatic)', 'Credit card (automatic)'] %}
+                                <option value="{{ option }}" {% if form_inputs.get('Payment Method') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section__header">
+                    <h3>Données financières</h3>
+                </div>
+                <div class="field-grid">
+                    <label>
+                        Monthly Charges
+                        <input type="number" min="0" step="0.01" name="Monthly Charges" placeholder="Ex : 79.90" value="{{ form_inputs.get('Monthly Charges', '') }}" required>
+                        <small class="field-hint">Montant de la facture mensuelle actuelle.</small>
+                    </label>
+                    <label>
+                        Total Charges
+                        <input type="number" min="0" step="0.01" name="Total Charges" placeholder="Ex : 1320.50" value="{{ form_inputs.get('Total Charges', '') }}" required>
+                        <small class="field-hint">Somme des charges déjà facturées.</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section__header">
+                    <h3>Notes (optionnel)</h3>
+                    <small class="field-hint">Conservez un contexte pour l'historique.</small>
+                </div>
+                <textarea name="notes" rows="3" placeholder="Ajoutez des précisions utiles">{{ notes or '' }}</textarea>
+            </div>
+
+            <div class="form-actions stacked">
+                <button type="submit" class="btn btn-primary btn-xl" id="predict-btn">Calculer la probabilité</button>
+                <button type="reset" class="btn btn-tertiary">Réinitialiser</button>
+            </div>
+        </form>
+    </article>
+
+    <aside class="card card--light result-panel">
+        <div class="card-header">
+            <div>
+                <p class="eyebrow">Résultat</p>
+                <h2>Analyse de churn</h2>
+            </div>
+        </div>
+        {% if probability_pct is not none %}
+            <div class="result-highlight stacked">
+                <div>
+                    <span class="result-label">Probabilité de churn</span>
+                    <span class="result-value">{{ probability_pct | round(2) }} %</span>
+                </div>
+                <div>
+                    <span class="result-label">Churn label</span>
+                    <span class="risk-badge {{ churn_badge_class }}">{{ churn_label }}</span>
+                </div>
+            </div>
+            <p class="risk-message">{{ risk_message }}</p>
+            <div class="result-summary">
+                <h3>Résumé client</h3>
+                <ul class="summary-list">
+                    {% for item in summary_data %}
+                        <li>
+                            <span>{{ item.label }}</span>
+                            <strong>{{ item.value }}</strong>
+                        </li>
+                    {% endfor %}
+                    {% if client_reference %}
+                        <li>
+                            <span>Référence</span>
+                            <strong>{{ client_reference }}</strong>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="result-actions">
+                <button type="button" class="btn btn-secondary" id="save-history-btn">Enregistrer dans l'historique</button>
+                <a class="btn btn-tertiary" href="{{ url_for('history') }}">Voir l'historique</a>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <span class="empty-state__icon">🎯</span>
+                <p>Aucune prédiction pour le moment. Renseignez les champs à gauche puis lancez l’analyse.</p>
+            </div>
+        {% endif %}
+    </aside>
+</section>
+
+{% if probability_pct is not none %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const saveButton = document.getElementById('save-history-btn');
+        const form = document.getElementById('individual-form');
+        if (form) {
+            const predictBtn = document.getElementById('predict-btn');
+            form.addEventListener('submit', () => {
+                if (predictBtn) {
+                    predictBtn.dataset.originalLabel = predictBtn.textContent;
+                    predictBtn.textContent = 'Calcul en cours…';
+                    predictBtn.disabled = true;
+                }
+            });
+        }
+        if (!saveButton) {
+            return;
+        }
+        const saveEndpoint = '{{ url_for("history_save") }}';
+        const basePayload = {{ save_payload | tojson }};
+
+        const clonePayload = () => JSON.parse(JSON.stringify(basePayload));
+
+        const setButtonState = (label, disabled = false) => {
+            saveButton.textContent = label;
+            saveButton.disabled = disabled;
+        };
+
+        const sendRequest = async () => {
+            if (saveButton.disabled) {
+                return;
+            }
+            const notesField = form.querySelector('textarea[name="notes"]');
+            const clientField = form.querySelector('input[name="client_reference"]');
+
+            const payload = clonePayload();
+            payload.client_reference = clientField && clientField.value.trim() !== '' ? clientField.value.trim() : null;
+
+            const body = {
+                payload,
+                notes: notesField ? notesField.value : ''
+            };
+
+            const originalLabel = saveButton.textContent;
+            setButtonState('Enregistrement...', true);
+
+            try {
+                const response = await fetch(saveEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'Erreur lors de la sauvegarde.');
+                }
+
+                setButtonState('Enregistré', true);
+                showToast({
+                    message: 'Prédiction enregistrée.',
+                    link: { href: result.history_url, label: 'Voir dans l\'historique' },
+                    tone: 'success'
+                });
+            } catch (error) {
+                setButtonState(originalLabel, false);
+                showToast({
+                    message: error.message || 'Impossible d\'enregistrer la prédiction.',
+                    tone: 'error'
+                });
+            }
+        };
+
+        saveButton.addEventListener('click', () => sendRequest());
+    });
+</script>
+{% else %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('individual-form');
+        if (!form) {
+            return;
+        }
+        const predictBtn = document.getElementById('predict-btn');
+        form.addEventListener('submit', () => {
+            if (predictBtn) {
+                predictBtn.dataset.originalLabel = predictBtn.textContent;
+                predictBtn.textContent = 'Calcul en cours…';
+                predictBtn.disabled = true;
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

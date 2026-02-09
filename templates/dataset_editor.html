@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Éditeur dataset{% endblock %}
+{% block head_scripts %}
+<script defer src="{{ url_for('static', filename='js/dataset_editor.js') }}"></script>
+{% endblock %}
+{% block content %}
+<section class="card hero-card card--light prediction-hero">
+    <div>
+        <p class="eyebrow">Dataset</p>
+        <h1>Éditeur de dataset</h1>
+        <p class="muted">Modifiez les données, ajoutez/supprimez des lignes, puis enregistrez pour revenir à la page batch.</p>
+    </div>
+</section>
+
+<section class="card card--light">
+    <div class="card-header compact">
+        <div>
+            <h2>Table complète</h2>
+            <p class="muted small" id="editor-status">Chargement…</p>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn btn-tertiary" id="back-btn">Retour</button>
+            <button type="button" class="btn btn-secondary" id="add-row-btn" disabled>Ajouter une ligne</button>
+            <button type="button" class="btn btn-primary" id="save-btn" disabled>Enregistrer et revenir</button>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="form-actions">
+            <button type="button" class="btn btn-tertiary btn-compact" id="page-prev" disabled>Précédent</button>
+            <button type="button" class="btn btn-tertiary btn-compact" id="page-next" disabled>Suivant</button>
+            <span class="tag" id="page-range">—</span>
+        </div>
+        <div class="table-wrapper horizontal-scroll">
+            <table class="data-table" id="editor-table">
+                <thead>
+                    <tr id="editor-head"></tr>
+                </thead>
+                <tbody id="editor-body"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

@@ -1,0 +1,637 @@
+{% extends "base.html" %}
+{% block title %}Analyse du churn{% endblock %}
+{% block head_scripts %}
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+{% endblock %}
+{% block content %}
+<section class="card hero-card card--light prediction-hero analysis-hero">
+    <div>
+        <p class="eyebrow">Insights</p>
+        <h1>Analyse du churn</h1>
+        <p class="muted">Explorez les prédictions enregistrées pour comprendre la distribution des risques, les segments les plus sensibles et l'évolution dans le temps.</p>
+    </div>
+    <div class="hero-meta">
+        <div>
+            <span class="muted small">Prédictions analysées</span>
+            <strong>{{ kpis.total_predictions }}</strong>
+        </div>
+        <div>
+            <span class="muted small">Clients uniques</span>
+            <strong>{{ kpis.unique_customers or '—' }}</strong>
+        </div>
+    </div>
+</section>
+
+<section class="card card--light analysis-filters-card">
+    <form method="get" class="analysis-filter-toolbar">
+        <label>
+            <span>Du</span>
+            <input type="date" name="start_date" value="{{ filters.start_date }}">
+        </label>
+        <label>
+            <span>Au</span>
+            <input type="date" name="end_date" value="{{ filters.end_date }}">
+        </label>
+        <label>
+            <span>Niveau de risque</span>
+            <select name="risk">
+                <option value="all" {% if filters.risk == 'all' %}selected{% endif %}>Tous</option>
+                <option value="high" {% if filters.risk == 'high' %}selected{% endif %}>Risque élevé</option>
+                <option value="medium" {% if filters.risk == 'medium' %}selected{% endif %}>Risque moyen</option>
+                <option value="low" {% if filters.risk == 'low' %}selected{% endif %}>Risque faible</option>
+            </select>
+        </label>
+        <label>
+            <span>Source</span>
+            <select name="source">
+                <option value="all" {% if filters.source == 'all' %}selected{% endif %}>Toutes</option>
+                <option value="individual" {% if filters.source == 'individual' %}selected{% endif %}>Individuel</option>
+                <option value="batch" {% if filters.source == 'batch' %}selected{% endif %}>Batch</option>
+            </select>
+        </label>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Appliquer</button>
+            <a href="{{ url_for('analytics') }}" class="btn btn-tertiary">Réinitialiser</a>
+        </div>
+    </form>
+</section>
+
+{% if has_data %}
+    <section class="kpi-grid analysis-kpis">
+        <article class="kpi-card card--light">
+            <span class="kpi-label">Total des prédictions</span>
+            <span class="kpi-value">{{ kpis.total_predictions }}</span>
+        </article>
+        <article class="kpi-card card--light">
+            <span class="kpi-label">% Risque élevé</span>
+            <span class="kpi-value">{{ kpis.high_percent }} %</span>
+        </article>
+        <article class="kpi-card card--light">
+            <span class="kpi-label">% Risque moyen</span>
+            <span class="kpi-value">{{ kpis.medium_percent }} %</span>
+        </article>
+        <article class="kpi-card card--light">
+            <span class="kpi-label">% Risque faible</span>
+            <span class="kpi-value">{{ kpis.low_percent }} %</span>
+        </article>
+        <article class="kpi-card card--light">
+            <span class="kpi-label">Probabilité moyenne</span>
+            <span class="kpi-value">{{ kpis.avg_probability }} %</span>
+        </article>
+        <article class="kpi-card card--light">
+            <span class="kpi-label">Clients uniques</span>
+            <span class="kpi-value">{{ kpis.unique_customers or '—' }}</span>
+        </article>
+    </section>
+
+    <section class="analysis-charts">
+        <article class="card card--light chart-card">
+            <div class="card-header compact">
+                <h2>Distribution des niveaux de risque</h2>
+                <button type="button" class="btn btn-tertiary btn-compact chart-zoom-btn" data-chart="risk_distribution">Agrandir</button>
+            </div>
+            {% if charts.risk_distribution['values'] | sum %}
+                <div class="chart-canvas">
+                    <canvas id="riskDistributionChart"></canvas>
+                </div>
+            {% else %}
+                <p class="chart-empty">Aucune donnée disponible.</p>
+            {% endif %}
+        </article>
+        <article class="card card--light chart-card">
+            <div class="card-header compact">
+                <h2>Évolution des prédictions</h2>
+                <button type="button" class="btn btn-tertiary btn-compact chart-zoom-btn" data-chart="time_series">Agrandir</button>
+            </div>
+            {% if charts.time_series.labels %}
+                <div class="chart-canvas">
+                    <canvas id="timeSeriesChart"></canvas>
+                </div>
+            {% else %}
+                <p class="chart-empty">Aucune donnée disponible.</p>
+            {% endif %}
+        </article>
+        <article class="card card--light chart-card">
+            <div class="card-header compact">
+                <h2>Risque par type de contrat</h2>
+                <button type="button" class="btn btn-tertiary btn-compact chart-zoom-btn" data-chart="risk_by_contract">Agrandir</button>
+            </div>
+            {% if charts.risk_by_contract.labels %}
+                <div class="chart-canvas">
+                    <canvas id="contractChart"></canvas>
+                </div>
+            {% else %}
+                <p class="chart-empty">Aucune donnée disponible.</p>
+            {% endif %}
+        </article>
+        <article class="card card--light chart-card">
+            <div class="card-header compact">
+                <h2>Risque par ancienneté</h2>
+                <button type="button" class="btn btn-tertiary btn-compact chart-zoom-btn" data-chart="risk_by_tenure_group">Agrandir</button>
+            </div>
+            {% if charts.risk_by_tenure_group.labels %}
+                <div class="chart-canvas">
+                    <canvas id="tenureChart"></canvas>
+                </div>
+            {% else %}
+                <p class="chart-empty">Aucune donnée disponible.</p>
+            {% endif %}
+        </article>
+        <article class="card card--light chart-card">
+            <div class="card-header compact">
+                <h2>Charges mensuelles moyennes par risque</h2>
+                <button type="button" class="btn btn-tertiary btn-compact chart-zoom-btn" data-chart="charges_by_risk">Agrandir</button>
+            </div>
+            {% if charts.charges_by_risk['counts'] | sum %}
+                <div class="chart-canvas">
+                    <canvas id="chargesChart"></canvas>
+                </div>
+                <dl class="details-list">
+                    <div>
+                        <dt>Risque élevé</dt>
+                        <dd>{{ charts.charges_by_risk['values'][0] }} € · {{ charts.charges_by_risk['counts'][0] }} clients</dd>
+                    </div>
+                    <div>
+                        <dt>Risque moyen</dt>
+                        <dd>{{ charts.charges_by_risk['values'][1] }} € · {{ charts.charges_by_risk['counts'][1] }} clients</dd>
+                    </div>
+                    <div>
+                        <dt>Risque faible</dt>
+                        <dd>{{ charts.charges_by_risk['values'][2] }} € · {{ charts.charges_by_risk['counts'][2] }} clients</dd>
+                    </div>
+                </dl>
+            {% else %}
+                <p class="chart-empty">Aucune donnée disponible.</p>
+            {% endif %}
+        </article>
+    </section>
+
+    <section class="card card--light insights-card">
+        <div class="card-header">
+            <h2>Insights &amp; interprétation</h2>
+        </div>
+        <ul>
+            {% for insight in insights %}
+                <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+{% else %}
+    <section class="card card--light empty-card">
+        <p>Aucune donnée disponible pour l’instant. Lancez quelques prédictions pour voir l’analyse ici.</p>
+        <a class="btn btn-primary" href="{{ url_for('predict_individual') }}">Lancer une prédiction</a>
+    </section>
+{% endif %}
+
+<div class="modal" id="chart-zoom-modal" hidden aria-hidden="true">
+    <div class="modal__dialog card--light chart-zoom-dialog" role="dialog" aria-modal="true" aria-labelledby="chart-zoom-title">
+        <div class="modal__header">
+            <div>
+                <p class="eyebrow">Zoom</p>
+                <h2 id="chart-zoom-title">Agrandir</h2>
+                <p class="muted small" id="chart-zoom-subtitle">Survolez pour voir les valeurs.</p>
+            </div>
+            <button type="button" class="btn btn-tertiary btn-compact" id="chart-zoom-close">Fermer</button>
+        </div>
+        <div class="chart-zoom-canvas" id="chart-zoom-canvas">
+            <canvas id="chart-zoom-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.analysisCharts = {{ charts | tojson }};
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.Chart) {
+        return;
+    }
+    const chartData = window.analysisCharts || {};
+    const colors = {
+        high: '#ef4444',
+        medium: '#f97316',
+        low: '#22c55e',
+        neutral: 'rgba(15, 23, 42, 0.65)',
+    };
+
+    const chartText = '#0f172a';
+    const gridColor = 'rgba(15, 23, 42, 0.08)';
+    const tooltipBg = 'rgba(15, 23, 42, 0.92)';
+
+    Chart.defaults.font.family = '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = chartText;
+    Chart.defaults.maintainAspectRatio = false;
+    Chart.defaults.animation = { duration: 260 };
+
+    const baseLegend = {
+        position: 'bottom',
+        labels: {
+            usePointStyle: true,
+            pointStyle: 'circle',
+            boxWidth: 10,
+            boxHeight: 10,
+            padding: 14,
+            font: { size: 12, weight: 600 },
+            color: chartText,
+        },
+    };
+
+    const baseTooltip = {
+        enabled: true,
+        backgroundColor: tooltipBg,
+        titleColor: '#f8fafc',
+        bodyColor: '#f8fafc',
+        padding: 10,
+        cornerRadius: 10,
+        displayColors: true,
+    };
+
+    function buildZoomOptions() {
+        return {
+            pan: {
+                enabled: true,
+                mode: 'x',
+                modifierKey: 'shift',
+            },
+            zoom: {
+                wheel: { enabled: true },
+                pinch: { enabled: true },
+                mode: 'x',
+            },
+            limits: {
+                x: { min: 'original', max: 'original' },
+                y: { min: 'original', max: 'original' },
+            },
+        };
+    }
+
+    const centerTextPlugin = {
+        id: 'centerText',
+        afterDraw(chart, _args, options) {
+            const textLines = Array.isArray(options?.lines) ? options.lines : [];
+            if (!textLines.length) return;
+            const { ctx, chartArea } = chart;
+            if (!ctx || !chartArea) return;
+            const centerX = (chartArea.left + chartArea.right) / 2;
+            const centerY = (chartArea.top + chartArea.bottom) / 2;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const gap = 16;
+            const startY = centerY - ((textLines.length - 1) * gap) / 2;
+            textLines.forEach((line, idx) => {
+                ctx.font = line.font || '600 13px Inter, sans-serif';
+                ctx.fillStyle = line.color || chartText;
+                ctx.fillText(String(line.text || ''), centerX, startY + idx * gap);
+            });
+            ctx.restore();
+        },
+    };
+
+    function buildRiskDistributionConfig(source, isZoom) {
+        const total = (source.values || []).reduce((acc, value) => acc + (Number(value) || 0), 0);
+        return {
+            type: 'doughnut',
+            data: {
+                labels: source.labels,
+                datasets: [{
+                    data: source.values,
+                    backgroundColor: [colors.high, colors.medium, colors.low],
+                    borderWidth: 0,
+                    hoverOffset: 6,
+                }],
+            },
+            options: {
+                cutout: isZoom ? '74%' : '72%',
+                plugins: {
+                    legend: baseLegend,
+                    tooltip: baseTooltip,
+                    centerText: {
+                        lines: [
+                            { text: `${total}`, font: isZoom ? '700 22px Inter, sans-serif' : '700 18px Inter, sans-serif', color: chartText },
+                            { text: 'Clients', font: '600 12px Inter, sans-serif', color: 'rgba(15, 23, 42, 0.62)' },
+                        ],
+                    },
+                },
+            },
+            plugins: [centerTextPlugin],
+        };
+    }
+
+    function buildTimeSeriesConfig(source, enableZoom) {
+        return {
+            type: 'line',
+            data: {
+                labels: source.labels,
+                datasets: [
+                    {
+                        label: 'Nombre de prédictions',
+                        data: source.counts,
+                        borderColor: colors.neutral,
+                        backgroundColor: 'rgba(15, 23, 42, 0.08)',
+                        tension: 0.35,
+                        cubicInterpolationMode: 'monotone',
+                        fill: true,
+                        yAxisID: 'y',
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                    },
+                    {
+                        label: 'Probabilité moyenne (%)',
+                        data: source.avg_probabilities,
+                        borderColor: colors.medium,
+                        backgroundColor: colors.medium,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        tension: 0.35,
+                        cubicInterpolationMode: 'monotone',
+                        yAxisID: 'y1',
+                    },
+                ],
+            },
+            options: {
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: {
+                        grid: { color: 'transparent' },
+                        ticks: { maxTicksLimit: 7, autoSkip: true, color: 'rgba(15, 23, 42, 0.62)' },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Volume', color: 'rgba(15, 23, 42, 0.62)' },
+                        grid: { color: gridColor },
+                        ticks: { maxTicksLimit: 6, color: 'rgba(15, 23, 42, 0.62)' },
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Probabilité (%)', color: 'rgba(15, 23, 42, 0.62)' },
+                        ticks: { maxTicksLimit: 6, color: 'rgba(15, 23, 42, 0.62)', callback: value => `${value}%` },
+                    },
+                },
+                plugins: {
+                    legend: baseLegend,
+                    tooltip: baseTooltip,
+                    zoom: enableZoom ? buildZoomOptions() : undefined,
+                },
+            },
+        };
+    }
+
+    function buildContractConfig(source, enableZoom) {
+        const contractRows = (source.labels || []).map((label, idx) => ({
+            label,
+            value: Number((source.values || [])[idx] || 0),
+        }));
+        contractRows.sort((a, b) => b.value - a.value);
+        return {
+            type: 'bar',
+            data: {
+                labels: contractRows.map(row => row.label),
+                datasets: [{
+                    label: '% Risque élevé',
+                    data: contractRows.map(row => row.value),
+                    backgroundColor: colors.high,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    barPercentage: 0.65,
+                    categoryPercentage: 0.7,
+                }],
+            },
+            options: {
+                scales: {
+                    x: {
+                        grid: { color: 'transparent' },
+                        ticks: { autoSkip: true, maxTicksLimit: 7, color: 'rgba(15, 23, 42, 0.62)' },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: gridColor },
+                        ticks: { maxTicksLimit: 5, color: 'rgba(15, 23, 42, 0.62)', callback: value => `${value}%` },
+                    },
+                },
+                plugins: {
+                    legend: baseLegend,
+                    tooltip: baseTooltip,
+                    zoom: enableZoom ? buildZoomOptions() : undefined,
+                },
+            },
+        };
+    }
+
+    function buildTenureConfig(source, enableZoom) {
+        return {
+            type: 'bar',
+            data: {
+                labels: source.labels,
+                datasets: [{
+                    label: '% Risque élevé',
+                    data: source.high_pct,
+                    backgroundColor: colors.high,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    barPercentage: 0.65,
+                    categoryPercentage: 0.7,
+                }],
+            },
+            options: {
+                scales: {
+                    x: {
+                        grid: { color: 'transparent' },
+                        ticks: { color: 'rgba(15, 23, 42, 0.62)' },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: gridColor },
+                        ticks: { maxTicksLimit: 5, color: 'rgba(15, 23, 42, 0.62)', callback: value => `${value}%` },
+                    },
+                },
+                plugins: {
+                    legend: baseLegend,
+                    tooltip: baseTooltip,
+                    zoom: enableZoom ? buildZoomOptions() : undefined,
+                },
+            },
+        };
+    }
+
+    function buildChargesConfig(source, enableZoom) {
+        return {
+            type: 'bar',
+            data: {
+                labels: source.labels,
+                datasets: [{
+                    label: 'Charges mensuelles moyennes (€)',
+                    data: source.values,
+                    backgroundColor: [colors.high, colors.medium, colors.low],
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    barPercentage: 0.65,
+                    categoryPercentage: 0.7,
+                }],
+            },
+            options: {
+                scales: {
+                    x: {
+                        grid: { color: 'transparent' },
+                        ticks: { color: 'rgba(15, 23, 42, 0.62)' },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: gridColor },
+                        ticks: { maxTicksLimit: 5, color: 'rgba(15, 23, 42, 0.62)' },
+                    },
+                },
+                plugins: {
+                    legend: baseLegend,
+                    tooltip: baseTooltip,
+                    zoom: enableZoom ? buildZoomOptions() : undefined,
+                },
+            },
+        };
+    }
+
+    function canZoom(key, data) {
+        if (!data) return false;
+        if (key === 'risk_distribution') return (data.values || []).some(v => Number(v) > 0);
+        if (key === 'time_series') return (data.labels || []).length > 0;
+        if (key === 'risk_by_contract') return (data.labels || []).length > 0;
+        if (key === 'risk_by_tenure_group') return (data.labels || []).length > 0;
+        if (key === 'charges_by_risk') return (data.counts || []).some(v => Number(v) > 0);
+        return false;
+    }
+
+    function buildConfigForKey(key, data, isZoom) {
+        if (key === 'risk_distribution') return buildRiskDistributionConfig(data, isZoom);
+        if (key === 'time_series') return buildTimeSeriesConfig(data, isZoom);
+        if (key === 'risk_by_contract') return buildContractConfig(data, isZoom);
+        if (key === 'risk_by_tenure_group') return buildTenureConfig(data, isZoom);
+        if (key === 'charges_by_risk') return buildChargesConfig(data, isZoom);
+        return null;
+    }
+
+    const donutCtx = document.getElementById('riskDistributionChart');
+    if (donutCtx && chartData.risk_distribution && chartData.risk_distribution.values.some(value => value > 0)) {
+        new Chart(donutCtx, buildRiskDistributionConfig(chartData.risk_distribution, false));
+    }
+
+    const timeCtx = document.getElementById('timeSeriesChart');
+    if (timeCtx && chartData.time_series && chartData.time_series.labels.length) {
+        new Chart(timeCtx, buildTimeSeriesConfig(chartData.time_series, false));
+    }
+
+    const contractCtx = document.getElementById('contractChart');
+    if (contractCtx && chartData.risk_by_contract && chartData.risk_by_contract.labels.length) {
+        new Chart(contractCtx, buildContractConfig(chartData.risk_by_contract));
+    }
+
+    const tenureCtx = document.getElementById('tenureChart');
+    if (tenureCtx && chartData.risk_by_tenure_group && chartData.risk_by_tenure_group.labels.length) {
+        new Chart(tenureCtx, buildTenureConfig(chartData.risk_by_tenure_group));
+    }
+
+    const chargesCtx = document.getElementById('chargesChart');
+    if (chargesCtx && chartData.charges_by_risk && chartData.charges_by_risk.counts.some(value => value > 0)) {
+        new Chart(chargesCtx, buildChargesConfig(chartData.charges_by_risk));
+    }
+
+    const modalEl = document.getElementById('chart-zoom-modal');
+    const modalCloseBtn = document.getElementById('chart-zoom-close');
+    const modalTitleEl = document.getElementById('chart-zoom-title');
+    const modalCanvasHost = document.getElementById('chart-zoom-canvas');
+    const modalCanvas = document.getElementById('chart-zoom-chart');
+    let zoomChart = null;
+    let openSequence = 0;
+
+    function getCanvasChart(canvas) {
+        if (!canvas || !window.Chart || typeof window.Chart.getChart !== 'function') return null;
+        return window.Chart.getChart(canvas);
+    }
+
+    function destroyCanvasChart(canvas) {
+        const existing = getCanvasChart(canvas);
+        if (existing) existing.destroy();
+    }
+
+    function waitForSize(element, sequence, attempts = 10) {
+        return new Promise((resolve) => {
+            const tick = (remaining) => {
+                if (sequence !== openSequence) return resolve(false);
+                const rect = element.getBoundingClientRect ? element.getBoundingClientRect() : { width: 0, height: 0 };
+                if (rect.width > 10 && rect.height > 10) return resolve(true);
+                if (remaining <= 0) return resolve(false);
+                requestAnimationFrame(() => tick(remaining - 1));
+            };
+            tick(attempts);
+        });
+    }
+
+    function closeModal() {
+        if (!modalEl) return;
+        openSequence += 1;
+        if (modalCanvas) destroyCanvasChart(modalCanvas);
+        if (zoomChart) zoomChart = null;
+        modalEl.hidden = true;
+        modalEl.setAttribute('aria-hidden', 'true');
+    }
+
+    async function openModal(key, title) {
+        if (!modalEl || !modalCanvasHost || !modalCanvas) return;
+        const data = chartData[key];
+        if (!canZoom(key, data)) return;
+
+        openSequence += 1;
+        const localSequence = openSequence;
+        destroyCanvasChart(modalCanvas);
+        zoomChart = null;
+        if (modalTitleEl) modalTitleEl.textContent = title || 'Agrandir';
+        modalEl.hidden = false;
+        modalEl.setAttribute('aria-hidden', 'false');
+
+        const config = buildConfigForKey(key, data, true);
+        if (!config) return;
+
+        const ok = await waitForSize(modalCanvasHost, localSequence, 12);
+        if (!ok || localSequence !== openSequence) return;
+
+        try {
+            destroyCanvasChart(modalCanvas);
+            modalCanvas.removeAttribute('style');
+            zoomChart = new Chart(modalCanvas, { ...config, options: { responsive: true, ...config.options } });
+            zoomChart.resize();
+            zoomChart.update('none');
+        } catch (err) {
+            if (window.showToast) window.showToast({ message: 'Impossible d’afficher ce graphique en zoom.', tone: 'error' });
+        }
+    }
+
+    document.querySelectorAll('.chart-zoom-btn').forEach((btn) => {
+        const key = btn.dataset.chart;
+        const title = btn.closest('.card-header')?.querySelector('h2')?.textContent || 'Agrandir';
+        const enabled = canZoom(key, chartData[key]);
+        btn.disabled = !enabled;
+        btn.addEventListener('click', () => openModal(key, title));
+    });
+
+    if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+    if (modalEl) {
+        modalEl.addEventListener('click', (event) => {
+            if (event.target === modalEl) closeModal();
+        });
+    }
+    if (modalCanvas) {
+        modalCanvas.addEventListener('dblclick', () => {
+            if (zoomChart && typeof zoomChart.resetZoom === 'function') zoomChart.resetZoom();
+        });
+    }
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modalEl && !modalEl.hidden) closeModal();
+    });
+});
+</script>
+{% endblock %}

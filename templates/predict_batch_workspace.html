@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Prédiction batch (dataset){% endblock %}
+{% block head_scripts %}
+<script>
+    window.batchPageConfig = {
+        maxRows: {{ max_rows }},
+        allowedExtensions: {{ allowed_extensions | tojson }}
+    };
+</script>
+<script defer src="{{ url_for('static', filename='js/batch_min.js') }}"></script>
+{% endblock %}
+{% block content %}
+<section class="card hero-card card--light prediction-hero">
+    <div>
+        <p class="eyebrow">Dataset</p>
+        <h1>Prédiction batch (dataset)</h1>
+        <p class="muted">Importez un CSV/Excel, vérifiez le résumé, puis lancez la prédiction sur l'ensemble du lot.</p>
+    </div>
+</section>
+
+<section class="prediction-grid">
+    <article class="card card--light prediction-form-card" aria-label="Actions batch">
+        <div class="form-intro">
+            <div>
+                <h2>Actions</h2>
+                <p class="muted small">La table complète du dataset s’affiche uniquement dans l’éditeur.</p>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <input type="file" id="batch-file-input" accept="{{ allowed_extensions_accept }}" hidden>
+            <button type="button" class="btn btn-secondary" id="import-btn">Importer fichier</button>
+            <button type="button" class="btn btn-primary" id="predict-btn" disabled>Prédire</button>
+            <details class="export-menu" id="export-menu" data-disabled="true">
+                <summary class="btn btn-tertiary" id="export-btn">Exporter</summary>
+                <div class="export-menu__panel" data-export-buttons>
+                    <button type="button" class="btn btn-secondary btn-compact" data-format="csv">CSV</button>
+                    <button type="button" class="btn btn-secondary btn-compact" data-format="excel">Excel</button>
+                </div>
+            </details>
+            <button type="button" class="btn btn-tertiary" id="save-btn" disabled>Enregistrer</button>
+        </div>
+
+        <div class="form-section">
+            <div class="form-section__header">
+                <h3>Dataset</h3>
+                <small class="field-hint" id="file-name">Aucun fichier importé.</small>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-tertiary" id="edit-btn" disabled>Modifier les données</button>
+            </div>
+        </div>
+    </article>
+
+    <aside class="card card--light result-panel" aria-label="Résumé">
+        <div class="card-header">
+            <div>
+                <p class="eyebrow">Résumé</p>
+                <h2>Statut du lot</h2>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <dl class="details-list">
+                <div>
+                    <dt>Nombre de lignes</dt>
+                    <dd id="summary-rows">—</dd>
+                </div>
+                <div>
+                    <dt>Nombre de colonnes</dt>
+                    <dd id="summary-cols">—</dd>
+                </div>
+                <div>
+                    <dt>Cellules manquantes</dt>
+                    <dd id="summary-missing">—</dd>
+                </div>
+                <div>
+                    <dt>Statut de validation</dt>
+                    <dd id="summary-validation">—</dd>
+                </div>
+            </dl>
+            <p class="muted small" id="batch-status">Importez un fichier pour commencer.</p>
+        </div>
+    </aside>
+</section>
+{% endblock %}
+

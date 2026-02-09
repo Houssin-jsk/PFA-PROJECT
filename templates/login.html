@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Connexion{% endblock %}
+{% block content %}
+<section class="auth-container signup-wizard">
+    <div class="signup-card">
+        <header class="signup-header">
+            <div>
+                <p class="eyebrow">Connexion</p>
+                <h1>Accéder à votre espace</h1>
+                <p class="muted">Connectez-vous avec vos identifiants professionnels.</p>
+            </div>
+        </header>
+
+        <form method="post" class="signup-form" novalidate>
+            <div class="signup-grid is-single">
+                <label>
+                    E-mail professionnel
+                    <input type="email" name="email" placeholder="nom@entreprise.com" required autofocus autocomplete="email">
+                </label>
+                <label>
+                    Mot de passe
+                    <input type="password" name="password" placeholder="********" required autocomplete="current-password">
+                </label>
+            </div>
+
+            <div class="signup-actions">
+                <button type="submit" class="btn btn-primary btn-xl">Connexion</button>
+                <p class="auth-switch">Pas encore inscrit ? <a href="{{ url_for('register') }}">Inscription</a></p>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

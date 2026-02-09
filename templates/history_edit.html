@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Modifier l'entrée{% endblock %}
+{% block content %}
+<section class="card hero-card card--light prediction-hero">
+    <div>
+        <p class="eyebrow">Historique</p>
+        <h1>Modifier l'entrée</h1>
+        <p class="muted">Ajustez les informations associées à cette prédiction.</p>
+    </div>
+</section>
+
+<section class="prediction-grid">
+    <article class="card card--light prediction-form-card" aria-label="Mettre à jour le client">
+        <div class="form-intro">
+            <div>
+                <h2>Mettre à jour le client</h2>
+                <p class="muted small">Les changements déclenchent une nouvelle prédiction pour cette entrée.</p>
+            </div>
+            <div class="form-actions justify-end">
+                <a class="btn btn-tertiary btn-compact" href="{{ url_for('history') }}">Retour</a>
+            </div>
+        </div>
+
+        <form method="post">
+            <label>
+                Référence client
+                <input type="text" name="client_reference" value="{{ client_reference or '' }}">
+            </label>
+
+            <div class="form-section">
+                <h3>Profil personnel</h3>
+                <div class="field-grid">
+                    <label>
+                        Gender
+                        <select name="Gender" required>
+                            <option value="" disabled {% if not input_data.get('Gender') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Male', 'Female'] %}
+                                <option value="{{ option }}" {% if input_data.get('Gender') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Senior Citizen
+                        <select name="Senior Citizen" required>
+                            <option value="" disabled {% if not input_data.get('Senior Citizen') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Yes', 'No'] %}
+                                <option value="{{ option }}" {% if input_data.get('Senior Citizen') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Partner
+                        <select name="Partner" required>
+                            <option value="" disabled {% if not input_data.get('Partner') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Yes', 'No'] %}
+                                <option value="{{ option }}" {% if input_data.get('Partner') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Dependents
+                        <select name="Dependents" required>
+                            <option value="" disabled {% if not input_data.get('Dependents') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Yes', 'No'] %}
+                                <option value="{{ option }}" {% if input_data.get('Dependents') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Compte & ancienneté</h3>
+                <div class="field-grid">
+                    <label>
+                        Tenure Months
+                        <input type="number" min="1" step="1" name="Tenure Months" value="{{ input_data.get('Tenure Months', '') }}" required>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Services</h3>
+                <div class="field-grid services-grid">
+                    {% set yes_no = ['Yes', 'No'] %}
+                    <label>
+                        Phone Service
+                        <select name="Phone Service" required>
+                            <option value="" disabled {% if not input_data.get('Phone Service') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in yes_no %}
+                                <option value="{{ option }}" {% if input_data.get('Phone Service') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Multiple Lines
+                        <select name="Multiple Lines" required>
+                            <option value="" disabled {% if not input_data.get('Multiple Lines') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Yes', 'No', 'No phone service'] %}
+                                <option value="{{ option }}" {% if input_data.get('Multiple Lines') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Internet Service
+                        <select name="Internet Service" required>
+                            <option value="" disabled {% if not input_data.get('Internet Service') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['DSL', 'Fiber optic', 'No'] %}
+                                <option value="{{ option }}" {% if input_data.get('Internet Service') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    {% for feature in ['Online Security', 'Online Backup', 'Device Protection', 'Tech Support', 'Streaming TV', 'Streaming Movies'] %}
+                        <label>
+                            {{ feature }}
+                            <select name="{{ feature }}" required>
+                                <option value="" disabled {% if not input_data.get(feature) %}selected{% endif %}>Sélectionner</option>
+                                {% for option in ['Yes', 'No', 'No internet service'] %}
+                                    <option value="{{ option }}" {% if input_data.get(feature) == option %}selected{% endif %}>{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Contrat & facturation</h3>
+                <div class="field-grid">
+                    <label>
+                        Contract
+                        <select name="Contract" required>
+                            <option value="" disabled {% if not input_data.get('Contract') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Month-to-month', 'One year', 'Two year'] %}
+                                <option value="{{ option }}" {% if input_data.get('Contract') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Paperless Billing
+                        <select name="Paperless Billing" required>
+                            <option value="" disabled {% if not input_data.get('Paperless Billing') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in yes_no %}
+                                <option value="{{ option }}" {% if input_data.get('Paperless Billing') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Payment Method
+                        <select name="Payment Method" required>
+                            <option value="" disabled {% if not input_data.get('Payment Method') %}selected{% endif %}>Sélectionner</option>
+                            {% for option in ['Electronic check', 'Mailed check', 'Bank transfer (automatic)', 'Credit card (automatic)'] %}
+                                <option value="{{ option }}" {% if input_data.get('Payment Method') == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Données financières</h3>
+                <div class="field-grid">
+                    <label>
+                        Monthly Charges
+                        <input type="number" min="0" step="0.01" name="Monthly Charges" value="{{ input_data.get('Monthly Charges', '') }}" required>
+                    </label>
+                    <label>
+                        Total Charges
+                        <input type="number" min="0" step="0.01" name="Total Charges" value="{{ input_data.get('Total Charges', '') }}" required>
+                    </label>
+                </div>
+            </div>
+
+            <label>
+                Notes
+                <textarea name="notes" rows="4">{{ notes or '' }}</textarea>
+            </label>
+
+            <div class="form-actions justify-end">
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <a href="{{ url_for('history') }}" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </article>
+
+    <aside class="card card--light" aria-label="Détails de la prédiction">
+        <div class="card-header">
+            <div>
+                <p class="eyebrow">Détails</p>
+                <h2>Prédiction</h2>
+            </div>
+        </div>
+        <dl class="details-list details-list--stacked">
+            <div>
+                <dt>Date</dt>
+                <dd>{{ record.created_at.strftime('%d/%m/%Y %H:%M') }}</dd>
+            </div>
+            <div>
+                <dt>Probabilité</dt>
+                <dd>{{ (record.probability * 100) | round(2) }} %</dd>
+            </div>
+            <div>
+                <dt>Décision</dt>
+                <dd>{{ record.decision }}</dd>
+            </div>
+            <div>
+                <dt>Origine</dt>
+                <dd>{{ 'Par lot' if record.source_type == 'batch' else 'Individuelle' }}</dd>
+            </div>
+        </dl>
+
+        <div class="card-subsection">
+            <h3>Variables utilisées</h3>
+            <ul class="compact-list">
+                {% for feature in feature_metadata %}
+                    <li><strong>{{ feature.name }}</strong> : {{ format_feature_value(feature.name, input_data.get(feature.name)) }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </aside>
+</section>
+{% endblock %}
