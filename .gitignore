@@ -1,0 +1,21 @@
+# Python generated files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Secrets and local environments
+.env
+.env.*
+!.env.example
+
+# Runtime databases and imported user batches
+instance/*.db
+instance/*.sqlite*
+instance/batch_cache/
+*.log
+
+# Operating system and editors
+.DS_Store
+Thumbs.db
